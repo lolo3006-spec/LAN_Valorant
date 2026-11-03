@@ -130,7 +130,9 @@ export function TeamsView() {
                   <Button variant="ghost" size="sm" onClick={() => setEditTeam(t)}>Modifier</Button>
                   <Button
                     variant="destructive"
-                    size="sm"
+                    size="icon-sm"
+                    aria-label={`Supprimer l’équipe ${t.name}`}
+                    title={`Supprimer ${t.name}`}
                     disabled={busy}
                     onClick={() => {
                       if (window.confirm(`Supprimer définitivement l’équipe ${t.name} ? Les joueurs resteront inscrits au tournoi.`)) {
@@ -138,7 +140,7 @@ export function TeamsView() {
                       }
                     }}
                   >
-                    <Trash2 aria-hidden="true" /> Supprimer
+                    <Trash2 aria-hidden="true" />
                   </Button>
                 </div>
               ) : t.players.length < size && ouvert ? (
