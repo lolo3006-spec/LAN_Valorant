@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Lock, LogOut, Play, Plus, Scale, Unlock, UserMinus, UserPlus } from 'lucide-react'
+import { Lock, LogOut, Play, Plus, Scale, Trash2, Unlock, UserMinus, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Modal, FormField, fieldClass } from '@/components/ui/modal'
 import { useRole } from '@/components/role-provider'
@@ -66,6 +66,10 @@ export function TeamsView() {
 
         {isOrga ? (
           <div className="flex flex-wrap gap-2">
+            <Button size="cta" variant="outline" onClick={() => setCreateOpen(true)} disabled={busy}>
+              <Plus aria-hidden="true" />
+              Créer une équipe
+            </Button>
             {ouvert && (
               <Button size="cta" onClick={cloturer} disabled={busy}>
                 <Lock aria-hidden="true" />
@@ -122,7 +126,21 @@ export function TeamsView() {
           {teams.map((t) => (
             <TeamCard key={t.id} team={t} size={size}>
               {isOrga ? (
-                <Button variant="ghost" size="sm" onClick={() => setEditTeam(t)}>Modifier</Button>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => setEditTeam(t)}>Modifier</Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    disabled={busy}
+                    onClick={() => {
+                      if (window.confirm(`Supprimer définitivement l’équipe ${t.name} ? Les joueurs resteront inscrits au tournoi.`)) {
+                        run(() => api.adminSupprimerEquipe(t.id), `${t.name} a été supprimée.`)
+                      }
+                    }}
+                  >
+                    <Trash2 aria-hidden="true" /> Supprimer
+                  </Button>
+                </div>
               ) : t.players.length < size && ouvert ? (
                 session ? (
                   peutRejoindre && (
@@ -175,14 +193,14 @@ export function TeamsView() {
         )}
       </section>
 
-      <CreateTeamModal open={createOpen} onClose={() => setCreateOpen(false)} tournamentId={tournament.id} />
+      <CreateTeamModal open={createOpen} onClose={() => setCreateOpen(false)} tournamentId={tournament.id} isOrga={isOrga} />
       <EditTeamModal team={editTeam} onClose={() => setEditTeam(null)} isOrga={isOrga} canEditPlayers={avantLancement} />
       <AssignModal player={assignPlayer} onClose={() => setAssignPlayer(null)} teams={teams.filter((t) => t.players.length < size)} />
     </main>
   )
 }
 
-function CreateTeamModal({ open, onClose, tournamentId }: { open: boolean; onClose: () => void; tournamentId: string }) {
+function CreateTeamModal({ open, onClose, tournamentId, isOrga }: { open: boolean; onClose: () => void; tournamentId: string; isOrga: boolean }) {
   const { run, busy } = useTournament()
   return (
     <Modal open={open} onClose={onClose} title="Créer une équipe">
@@ -192,8 +210,10 @@ function CreateTeamModal({ open, onClose, tournamentId }: { open: boolean; onClo
           e.preventDefault()
           const d = new FormData(e.currentTarget)
           const ok = await run(
-            () => api.creerEquipe(tournamentId, String(d.get('nom')), String(d.get('tag'))),
-            'Équipe créée : tu en es le capitaine !',
+            () => isOrga
+              ? api.adminCreerEquipe(tournamentId, String(d.get('nom')), String(d.get('tag')))
+              : api.creerEquipe(tournamentId, String(d.get('nom')), String(d.get('tag'))),
+            isOrga ? 'Équipe créée.' : 'Équipe créée : tu en es le capitaine !',
           )
           if (ok) onClose()
         }}

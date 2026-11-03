@@ -160,6 +160,9 @@ export const api = {
   seDesinscrire: (tournoi: string) => rpc('se_desinscrire', { p_tournoi: tournoi }),
   creerEquipe: (tournoi: string, nom: string, tag: string) =>
     rpc<string>('creer_equipe', { p_tournoi: tournoi, p_nom: nom, p_tag: tag }),
+  adminCreerEquipe: (tournoi: string, nom: string, tag: string) =>
+    rpc<string>('admin_creer_equipe', { p_tournoi: tournoi, p_nom: nom, p_tag: tag }),
+  adminSupprimerEquipe: (equipe: string) => rpc('admin_supprimer_equipe', { p_equipe: equipe }),
   rejoindreEquipe: (equipe: string) => rpc('rejoindre_equipe', { p_equipe: equipe }),
   quitterEquipe: (equipe: string) => rpc('quitter_equipe', { p_equipe: equipe }),
   modifierEquipe: (equipe: string, nom: string, tag: string, seed: number | null) =>

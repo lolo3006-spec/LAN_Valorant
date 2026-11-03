@@ -150,3 +150,86 @@ BEGIN
   WHERE id = p_joueur;
 END;
 $$;
+
+CREATE OR REPLACE FUNCTION public.admin_creer_equipe(p_tournoi uuid, p_nom text, p_tag text)
+RETURNS uuid
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_equipe uuid;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Connexion requise';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.joueurs
+    WHERE id = auth.uid()
+      AND est_admin = true
+  ) THEN
+    RAISE EXCEPTION 'Action réservée aux organisateurs';
+  END IF;
+
+  IF p_tournoi IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.tournois WHERE id = p_tournoi
+  ) THEN
+    RAISE EXCEPTION 'Tournoi introuvable';
+  END IF;
+
+  IF p_nom IS NULL OR length(btrim(p_nom)) NOT BETWEEN 2 AND 40 THEN
+    RAISE EXCEPTION 'Le nom de l’équipe doit contenir entre 2 et 40 caractères';
+  END IF;
+
+  IF p_tag IS NULL OR btrim(p_tag) !~ '^[A-Za-z0-9]{2,4}$' THEN
+    RAISE EXCEPTION 'Le tag doit contenir 2 à 4 lettres ou chiffres';
+  END IF;
+
+  INSERT INTO public.equipes (tournoi_id, nom, tag)
+  VALUES (p_tournoi, btrim(p_nom), upper(btrim(p_tag)))
+  RETURNING id INTO v_equipe;
+
+  RETURN v_equipe;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.admin_supprimer_equipe(p_equipe uuid)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Connexion requise';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.joueurs
+    WHERE id = auth.uid()
+      AND est_admin = true
+  ) THEN
+    RAISE EXCEPTION 'Action réservée aux organisateurs';
+  END IF;
+
+  IF p_equipe IS NULL OR NOT EXISTS (
+    SELECT 1 FROM public.equipes WHERE id = p_equipe
+  ) THEN
+    RAISE EXCEPTION 'Équipe introuvable';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.matchs
+    WHERE equipe_a_id = p_equipe OR equipe_b_id = p_equipe
+  ) THEN
+    RAISE EXCEPTION 'Impossible de supprimer une équipe déjà engagée dans un match';
+  END IF;
+
+  DELETE FROM public.membres_equipe WHERE equipe_id = p_equipe;
+  DELETE FROM public.equipes WHERE id = p_equipe;
+END;
+$$;
