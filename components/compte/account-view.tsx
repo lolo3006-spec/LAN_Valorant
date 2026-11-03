@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { KeyRound, LogOut, ShieldCheck, ShieldOff, Trash2, UserMinus } from 'lucide-react'
+import { KeyRound, LogOut, ShieldCheck, ShieldOff, Trash2, UserMinus, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Modal, FormField, fieldClass } from '@/components/ui/modal'
 import { useRole } from '@/components/role-provider'
@@ -50,23 +50,40 @@ export function AccountView() {
         </div>
       </section>
 
-      {tournament && isRegistered && (
-        <section className={card} aria-labelledby="desinscription">
-          <h2 id="desinscription" className="mb-2 text-2xl font-bold">Inscription au tournoi</h2>
-          <p className="mb-4 text-muted-foreground">
-            Tu es inscrit à « {tournament.name} ». Te désinscrire te retire aussi de ton équipe ; ton compte est conservé.
-          </p>
-          <Button
-            variant="outline"
-            disabled={busy || tournament.status !== 'inscriptions'}
-            onClick={() => {
-              if (window.confirm('Te désinscrire du tournoi ?')) {
-                run(() => api.seDesinscrire(tournament.id), 'Tu es désinscrit du tournoi.')
-              }
-            }}
-          >
-            <UserMinus aria-hidden="true" /> Me désinscrire du tournoi
-          </Button>
+      {tournament && (
+        <section className={card} aria-labelledby="participation-tournoi">
+          <h2 id="participation-tournoi" className="mb-2 text-2xl font-bold">Participation au tournoi</h2>
+          {isRegistered ? (
+            <>
+              <p className="mb-4 text-muted-foreground">
+                Tu es inscrit à « {tournament.name} ». Te désinscrire te retire aussi de ton équipe ; ton compte et
+                {isAdmin ? ' tes privilèges organisateur' : ' ton profil'} sont conservés.
+              </p>
+              <Button
+                variant="outline"
+                disabled={busy || tournament.status !== 'inscriptions'}
+                onClick={() => {
+                  if (window.confirm('Te désinscrire du tournoi ?')) {
+                    run(() => api.seDesinscrire(tournament.id), 'Tu es désinscrit du tournoi.')
+                  }
+                }}
+              >
+                <UserMinus aria-hidden="true" /> Me désinscrire du tournoi
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="mb-4 text-muted-foreground">
+                Tu n’es pas inscrit à « {tournament.name} ».{isAdmin && ' Tu peux garder tes privilèges organisateur sans participer au tournoi.'}
+              </p>
+              <Button
+                disabled={busy || tournament.status !== 'inscriptions'}
+                onClick={() => run(() => api.sInscrire(tournament.id), 'Tu es inscrit au tournoi !')}
+              >
+                <UserPlus aria-hidden="true" /> M’inscrire au tournoi
+              </Button>
+            </>
+          )}
           {tournament.status !== 'inscriptions' && (
             <p className="mt-2 text-sm text-muted-foreground">Les inscriptions sont fermées : contacte un organisateur.</p>
           )}
