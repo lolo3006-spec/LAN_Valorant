@@ -10,7 +10,7 @@ export default function Page() {
         <h1 className="text-5xl font-extrabold leading-none md:text-6xl">
           Nouveau <span className="text-primary">mot de passe</span>
         </h1>
-        <p className="mt-4 max-w-md text-lg text-muted-foreground">Choisis ton nouveau mot de passe. Tu resteras connecté ensuite.</p>
+        <p className="mt-4 max-w-md text-lg text-muted-foreground">Choisis ton nouveau mot de passe. Tu y resteras connecté ensuite.</p>
       </div>
       <NewPasswordForm />
     </main>
