@@ -132,7 +132,6 @@ export function TeamsView() {
                     variant="destructive"
                     size="icon-sm"
                     aria-label={`Supprimer l’équipe ${t.name}`}
-                    // title={`Supprimer ${t.name}`}
                     disabled={busy}
                     onClick={() => {
                       if (window.confirm(`Supprimer définitivement l’équipe ${t.name} ? Les joueurs resteront inscrits au tournoi.`)) {
