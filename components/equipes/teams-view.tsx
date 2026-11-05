@@ -51,7 +51,7 @@ export function TeamsView() {
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-10 md:px-6 md:py-14">
-      <div className="mb-10 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+      <div className="mb-10 flex flex-col gap-6">
         <div>
           <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] text-[#ff7a85]">
             Format {tournament.format} · {teams.length}/{tournament.maxTeams} équipes · {tournament.statusLabel}
@@ -66,7 +66,7 @@ export function TeamsView() {
         </div>
 
         {isOrga ? (
-          <div className="flex flex-wrap gap-2">
+          <div className="flex w-full flex-wrap justify-end gap-2">
             {avantLancement && (
               <Button size="cta" variant="outline" onClick={() => setFormatOpen(true)} disabled={busy}>
                 <SlidersHorizontal aria-hidden="true" />
