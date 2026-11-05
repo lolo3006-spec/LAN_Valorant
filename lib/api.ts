@@ -174,6 +174,8 @@ export const api = {
   // organisateurs
   cloturerInscriptions: (tournoi: string) =>
     rpc<{ equipe: string; joueurs: number; attendus: number }[]>('cloturer_inscriptions', { p_tournoi: tournoi }),
+  modifierFormatTournoi: (tournoi: string, format: Format) =>
+    rpc('admin_modifier_format_tournoi', { p_tournoi: tournoi, p_format: format }),
   rouvrirInscriptions: (tournoi: string) => rpc('rouvrir_inscriptions', { p_tournoi: tournoi }),
   equilibrer: (tournoi: string) => rpc<number>('equilibrer_agents_libres', { p_tournoi: tournoi }),
   affecterJoueur: (joueur: string, equipe: string) =>

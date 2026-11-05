@@ -2,20 +2,21 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Lock, LogOut, Play, Plus, Scale, Trash2, Unlock, UserMinus, UserPlus } from 'lucide-react'
+import { Lock, LogOut, Play, Plus, Scale, SlidersHorizontal, Trash2, Unlock, UserMinus, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Modal, FormField, fieldClass } from '@/components/ui/modal'
 import { useRole } from '@/components/role-provider'
 import { useTournament } from '@/components/tournament-provider'
 import { PlayerCard, SectionTitle, TeamCard } from '@/components/cards'
 import { api } from '@/lib/api'
-import { formatSize, type Player, type Team } from '@/lib/data'
+import { formatSize, formats, type Format, type Player, type Team } from '@/lib/data'
 
 export function TeamsView() {
   const { role, session } = useRole()
   const { tournament, teams, freeAgents, run, busy, isRegistered, myTeam, loading, notify } = useTournament()
   const isOrga = role === 'organisateur'
   const [createOpen, setCreateOpen] = useState(false)
+  const [formatOpen, setFormatOpen] = useState(false)
   const [editTeam, setEditTeam] = useState<Team | null>(null)
   const [assignPlayer, setAssignPlayer] = useState<Player | null>(null)
 
@@ -66,6 +67,12 @@ export function TeamsView() {
 
         {isOrga ? (
           <div className="flex flex-wrap gap-2">
+            {avantLancement && (
+              <Button size="cta" variant="outline" onClick={() => setFormatOpen(true)} disabled={busy}>
+                <SlidersHorizontal aria-hidden="true" />
+                Changer le format
+              </Button>
+            )}
             <Button size="cta" variant="outline" onClick={() => setCreateOpen(true)} disabled={busy}>
               <Plus aria-hidden="true" />
               Créer une équipe
@@ -195,9 +202,64 @@ export function TeamsView() {
       </section>
 
       <CreateTeamModal open={createOpen} onClose={() => setCreateOpen(false)} tournamentId={tournament.id} isOrga={isOrga} />
+      <FormatModal
+        open={formatOpen}
+        onClose={() => setFormatOpen(false)}
+        tournamentId={tournament.id}
+        currentFormat={tournament.format}
+      />
       <EditTeamModal team={editTeam} onClose={() => setEditTeam(null)} isOrga={isOrga} canEditPlayers={avantLancement} />
       <AssignModal player={assignPlayer} onClose={() => setAssignPlayer(null)} teams={teams.filter((t) => t.players.length < size)} />
     </main>
+  )
+}
+
+function FormatModal({
+  open,
+  onClose,
+  tournamentId,
+  currentFormat,
+}: {
+  open: boolean
+  onClose: () => void
+  tournamentId: string
+  currentFormat: Format
+}) {
+  const { run, busy, notify } = useTournament()
+  return (
+    <Modal open={open} onClose={onClose} title="Changer le format">
+      <form
+        className="flex flex-col gap-4"
+        onSubmit={async (e) => {
+          e.preventDefault()
+          const value = new FormData(e.currentTarget).get('format')
+          const selected = formats.find((option) => option.value === value)
+          if (!selected) {
+            notify('Format invalide.', 'erreur')
+            return
+          }
+          const ok = await run(
+            () => api.modifierFormatTournoi(tournamentId, selected.value),
+            'Format du tournoi mis à jour.',
+          )
+          if (ok) onClose()
+        }}
+      >
+        <FormField id="tournament-format" label="Format des équipes">
+          <select id="tournament-format" name="format" defaultValue={currentFormat} className={fieldClass}>
+            {formats.map((format) => (
+              <option key={format.value} value={format.value}>
+                {format.label} — {format.description}
+              </option>
+            ))}
+          </select>
+        </FormField>
+        <p className="text-sm text-muted-foreground">
+          Modifiable avant le lancement. Les équipes déjà formées ne peuvent pas dépasser la nouvelle taille.
+        </p>
+        <Button type="submit" size="lg" disabled={busy}>Enregistrer</Button>
+      </form>
+    </Modal>
   )
 }
 

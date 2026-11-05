@@ -233,3 +233,133 @@ BEGIN
   DELETE FROM public.equipes WHERE id = p_equipe;
 END;
 $$;
+
+DO $$
+DECLARE
+  v_format_type record;
+  v_constraint record;
+BEGIN
+  SELECT n.nspname, t.typname, t.typtype
+  INTO v_format_type
+  FROM pg_attribute a
+  JOIN pg_type t ON t.oid = a.atttypid
+  JOIN pg_namespace n ON n.oid = t.typnamespace
+  WHERE a.attrelid = 'public.tournois'::regclass
+    AND a.attname = 'format'
+    AND NOT a.attisdropped;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Colonne public.tournois.format introuvable';
+  END IF;
+
+  IF v_format_type.typtype = 'e' THEN
+    EXECUTE format(
+      'ALTER TYPE %I.%I ADD VALUE IF NOT EXISTS %L',
+      v_format_type.nspname,
+      v_format_type.typname,
+      '5v5'
+    );
+  END IF;
+
+  FOR v_constraint IN
+    SELECT conname
+    FROM pg_constraint
+    WHERE conrelid = 'public.tournois'::regclass
+      AND contype = 'c'
+      AND pg_get_constraintdef(oid) ILIKE '%format%'
+      AND (
+        pg_get_constraintdef(oid) ILIKE '%1v1%'
+        OR pg_get_constraintdef(oid) ILIKE '%2v2%'
+        OR pg_get_constraintdef(oid) ILIKE '%4v4%'
+      )
+  LOOP
+    EXECUTE format('ALTER TABLE public.tournois DROP CONSTRAINT %I', v_constraint.conname);
+  END LOOP;
+
+  IF v_format_type.typtype <> 'e' THEN
+    ALTER TABLE public.tournois
+      ADD CONSTRAINT tournois_format_supported_check
+      CHECK (format IN ('1v1', '2v2', '4v4', '5v5'));
+  END IF;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.admin_modifier_format_tournoi(p_tournoi uuid, p_format text)
+RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_statut text;
+  v_format_actuel text;
+  v_taille integer;
+  v_type_format text;
+BEGIN
+  IF auth.uid() IS NULL THEN
+    RAISE EXCEPTION 'Connexion requise';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM public.joueurs
+    WHERE id = auth.uid()
+      AND est_admin = true
+  ) THEN
+    RAISE EXCEPTION 'Action réservée aux organisateurs';
+  END IF;
+
+  IF p_format IS NULL OR p_format NOT IN ('1v1', '2v2', '4v4', '5v5') THEN
+    RAISE EXCEPTION 'Format invalide';
+  END IF;
+
+  SELECT statut::text, format::text
+  INTO v_statut, v_format_actuel
+  FROM public.tournois
+  WHERE id = p_tournoi
+  FOR UPDATE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Tournoi introuvable';
+  END IF;
+
+  IF v_statut NOT IN ('brouillon', 'inscriptions', 'cloture') THEN
+    RAISE EXCEPTION 'Le format ne peut plus être modifié après le lancement du tournoi';
+  END IF;
+
+  IF v_format_actuel = p_format THEN
+    RETURN;
+  END IF;
+
+  v_taille := CASE p_format
+    WHEN '1v1' THEN 1
+    WHEN '2v2' THEN 2
+    WHEN '4v4' THEN 4
+    WHEN '5v5' THEN 5
+  END;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.equipes e
+    JOIN public.membres_equipe me ON me.equipe_id = e.id
+    WHERE e.tournoi_id = p_tournoi
+    GROUP BY e.id
+    HAVING count(*) > v_taille
+  ) THEN
+    RAISE EXCEPTION 'Une équipe dépasse la taille du format choisi. Modifiez sa composition avant de changer de format.';
+  END IF;
+
+  SELECT a.atttypid::regtype::text
+  INTO v_type_format
+  FROM pg_attribute a
+  WHERE a.attrelid = 'public.tournois'::regclass
+    AND a.attname = 'format'
+    AND NOT a.attisdropped;
+
+  EXECUTE 'UPDATE public.tournois SET format = $1::' || v_type_format || ' WHERE id = $2'
+    USING p_format, p_tournoi;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.admin_modifier_format_tournoi(uuid, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.admin_modifier_format_tournoi(uuid, text) TO authenticated;

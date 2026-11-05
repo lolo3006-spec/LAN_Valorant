@@ -13,11 +13,12 @@
 | **Nommer / retirer un organisateur** | `/compte`, section « Organisateurs » (visible par les orgas) | `admin_liste_comptes`, `admin_definir_organisateur` |
 | **Créer une équipe sans s’y inscrire** | `/equipes`, organisateurs, quel que soit le statut du tournoi | `admin_creer_equipe` |
 | **Supprimer une équipe** | `/equipes`, organisateurs, quel que soit le statut du tournoi | `admin_supprimer_equipe` |
+| **Choisir le format (1v1, 2v2, 4v4 ou 5v5)** | `/equipes`, bouton « Changer le format », avant le lancement | `admin_modifier_format_tournoi` |
 
 Sécurités côté base : un joueur ne peut plus se nommer administrateur lui-même ; le dernier organisateur ne peut ni supprimer son compte ni perdre ses droits ; un joueur dans un tournoi en cours ne peut pas supprimer son compte.
 Une équipe déjà liée à un match ne peut pas être supprimée, afin de préserver le bracket et les scores. La suppression d’une équipe libère ses joueurs sans supprimer leur inscription au tournoi.
 
-Pour un projet Supabase déjà en service, exécuter à nouveau le contenu à jour de `supabase/schema.sql` dans **SQL Editor** afin d’ajouter les deux fonctions de gestion des équipes.
+Pour un projet Supabase déjà en service, exécuter à nouveau le contenu à jour de `supabase/schema.sql` dans **SQL Editor** afin d'ajouter les fonctions d'administration des équipes et du format.
 
 > Le mot de passe n'est jamais envoyé par e-mail : Supabase ne le connaît pas (il n'en garde qu'une empreinte). Le joueur reçoit un lien pour en choisir un nouveau.
 

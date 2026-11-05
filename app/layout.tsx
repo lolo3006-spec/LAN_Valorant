@@ -17,7 +17,7 @@ const barlow = Barlow_Condensed({
 export const metadata: Metadata = {
   title: 'LAN Valorant — Gestion de tournoi',
   description:
-    'Inscriptions, équipes, bracket et scores en direct pour le tournoi Valorant LAN de l’école (1v1, 2v2, 4v4).',
+    'Inscriptions, équipes, bracket et scores en direct pour le tournoi Valorant LAN de l’école (1v1, 2v2, 4v4, 5v5).',
   generator: 'v0.app',
   icons: {
     icon: [

@@ -1,7 +1,7 @@
 // Types partagés et contenus statiques.
 // Les données du tournoi (équipes, matchs, inscrits) viennent maintenant de Supabase : voir lib/api.ts
 
-export type Format = '1v1' | '2v2' | '4v4'
+export type Format = '1v1' | '2v2' | '4v4' | '5v5'
 export type MatchStatus = 'a-venir' | 'en-cours' | 'en-attente' | 'termine'
 export type Level = 'Débutant' | 'Intermédiaire' | 'Fort'
 export type TournamentStatus = 'brouillon' | 'inscriptions' | 'cloture' | 'en_cours' | 'termine'
@@ -69,6 +69,7 @@ export const formats: { value: Format; label: string; description: string; size:
   { value: '1v1', label: '1v1', description: 'Duel pur. Un joueur, un vainqueur.', size: 1 },
   { value: '2v2', label: '2v2', description: 'Duo coordonné, rounds rapides.', size: 2 },
   { value: '4v4', label: '4v4', description: 'Esprit d’équipe et stratégie.', size: 4 },
+  { value: '5v5', label: '5v5', description: 'Format complet, cinq joueurs par équipe.', size: 5 },
 ]
 
 export const steps = [

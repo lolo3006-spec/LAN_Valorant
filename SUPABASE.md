@@ -21,7 +21,8 @@ Le site (Next.js) affichait des données en dur (`lib/data.ts`). Il lit et écri
 **Ce que fait la base toute seule** (fonctions SQL appelées par le site) :
 
 - inscription d'un joueur → fiche joueur + inscription au tournoi (contrôle des places et de la date limite) ;
-- création d'équipe (le créateur devient capitaine), rejoindre / quitter une équipe (taille selon le format 1v1, 2v2, 4v4) ;
+- création d'équipe (le créateur devient capitaine), rejoindre / quitter une équipe (taille selon le format 1v1, 2v2, 4v4, 5v5) ;
+- changement du format du tournoi par un organisateur, uniquement avant son lancement ;
 - clôture des inscriptions → liste des équipes incomplètes ; en 1v1, chaque joueur reçoit automatiquement son équipe solo ;
 - **équilibrage** des agents libres : le joueur le plus fort va dans l'équipe la plus faible ;
 - **lancement du tournoi** → bracket complet à élimination directe ; si le nombre d'équipes n'est pas 2, 4, 8, 16…, les meilleures têtes de série sont **qualifiées d'office** ;
@@ -42,7 +43,9 @@ Le site (Next.js) affichait des données en dur (`lib/data.ts`). Il lit et écri
 5. Ouvre le fichier `supabase/schema.sql` du projet, **copie tout**, colle-le, clique **Run**.
    Le message attendu est *Success. No rows returned*.
 6. Menu **Table Editor** : tu dois voir les 6 tables, et une ligne dans `tournois`.
-   Modifie-la directement ici : nom, date, lieu, format (`1v1`, `2v2` ou `4v4`), nombre max de joueurs et d'équipes, date limite (`fin_inscriptions`, facultative).
+   Modifie-la directement ici : nom, date, lieu, format (`1v1`, `2v2`, `4v4` ou `5v5`), nombre max de joueurs et d'équipes, date limite (`fin_inscriptions`, facultative).
+
+Pour un projet déjà en service, exécute à nouveau `supabase/schema.sql` dans le **SQL Editor** afin d'ajouter la prise en charge du 5v5 et la fonction de changement de format. Dans **Équipes**, les organisateurs peuvent changer le format avant de lancer le tournoi ; une équipe déjà formée ne peut pas dépasser la nouvelle taille.
 
 # 3. Réglages de connexion
 
